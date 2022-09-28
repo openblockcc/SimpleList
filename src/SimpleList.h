@@ -7,8 +7,11 @@
              github.com/spacehuhn
    ===========================================
  */
-
+#if defined(ARDUINO_ARCH_AVR)
+#include <type_traits.h>
+#else
 #include <type_traits>
+#endif
 #include <cstddef>
 #include <functional>
 
@@ -169,7 +172,9 @@ void SimpleList<T>::add(int index, T obj) {
     newNode->data = obj;
 
     if (index == 0) {
+        SimpleListNode<T>* headNode = listBegin;
         listBegin = newNode;
+        newNode -> next = headNode;
     } else {
         SimpleListNode<T>* nodePrev = getNode(index - 1);
         newNode->next  = nodePrev->next;
@@ -379,17 +384,21 @@ void SimpleList<T>::moveToEnd() {
 
 template<typename T>
 int SimpleList<T>::search(T obj) {
-    if (compare == NULL) return -1;
 
     int i = 0;
+    bool found = 0;
 
     SimpleListNode<T>* hNode = getNode(i);
-    bool found               = compare(obj, hNode->data) == 0;
+    if (compare == NULL) {
+        found = (obj == hNode->data);
+    } else {
+        found = compare(obj, hNode->data) == 0;
+    }
 
     while (!found && i < listSize) {
         i++;
         hNode = getNode(i);
-        found = compare(obj, hNode->data) == 0;
+        found = (obj == hNode->data);
     }
 
     return found ? i : -1;
